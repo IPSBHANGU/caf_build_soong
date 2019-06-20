@@ -19,8 +19,6 @@ import (
 	"strings"
 
 	"android/soong/env"
-
-	"github.com/google/blueprint"
 )
 
 // This file supports dependencies on environment variables.  During build manifest generation,
@@ -31,27 +29,30 @@ import (
 // a manifest regeneration.
 
 var originalEnv map[string]string
+var SdclangEnv map[string]string
 
 func init() {
 	originalEnv = make(map[string]string)
+	SdclangEnv = make(map[string]string)
 	for _, env := range os.Environ() {
 		idx := strings.IndexRune(env, '=')
 		if idx != -1 {
 			originalEnv[env[:idx]] = env[idx+1:]
+			SdclangEnv[env[:idx]] = env[idx+1:]
 		}
 	}
         //Fix Later
 	//os.Clearenv()
 }
 
-func EnvSingleton() blueprint.Singleton {
+func EnvSingleton() Singleton {
 	return &envSingleton{}
 }
 
 type envSingleton struct{}
 
-func (c *envSingleton) GenerateBuildActions(ctx blueprint.SingletonContext) {
-	envDeps := ctx.Config().(Config).EnvDeps()
+func (c *envSingleton) GenerateBuildActions(ctx SingletonContext) {
+	envDeps := ctx.Config().EnvDeps()
 
 	envFile := PathForOutput(ctx, ".soong.environment")
 	if ctx.Failed() {

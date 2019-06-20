@@ -67,10 +67,13 @@ type variableProperties struct {
 			Cflags []string
 		}
 
-		// treble is true when a build is a Treble compliant device.  This is automatically set when
-		// a build is shipped with Android O, but can be overriden.  This controls such things as
-		// the sepolicy split and enabling the Treble linker namespaces.
-		Treble struct {
+		// treble_linker_namespaces is true when the system/vendor linker namespace separation is
+		// enabled.
+		Treble_linker_namespaces struct {
+			Cflags []string
+		}
+		// enforce_vintf_manifest is true when a device is required to have a vintf manifest.
+		Enforce_vintf_manifest struct {
 			Cflags []string
 		}
 
@@ -92,8 +95,37 @@ type variableProperties struct {
 		}
 
 		Pdk struct {
-			Enabled *bool
+			Enabled *bool `android:"arch_variant"`
+		} `android:"arch_variant"`
+
+		Uml struct {
+			Cppflags []string
 		}
+
+		Use_lmkd_stats_log struct {
+			Cflags []string
+		}
+
+		Arc struct {
+			Cflags       []string
+			Exclude_srcs []string
+			Include_dirs []string
+			Shared_libs  []string
+			Static_libs  []string
+			Srcs         []string
+		}
+
+		Device_support_hwfde struct {
+			Cflags      []string
+			Header_libs []string
+			Shared_libs []string
+		}
+
+		Device_support_hwfde_perf struct {
+			Cflags []string
+		}
+
+
 	} `android:"arch_variant"`
 }
 
@@ -103,16 +135,26 @@ type productVariables struct {
 	// Suffix to add to generated Makefiles
 	Make_suffix *string `json:",omitempty"`
 
-	Platform_sdk_version           *int     `json:",omitempty"`
-	Platform_version_all_codenames []string `json:",omitempty"`
+	BuildId             *string `json:",omitempty"`
+	BuildNumberFromFile *string `json:",omitempty"`
+	DateFromFile        *string `json:",omitempty"`
 
-	DeviceName        *string   `json:",omitempty"`
-	DeviceArch        *string   `json:",omitempty"`
-	DeviceArchVariant *string   `json:",omitempty"`
-	DeviceCpuVariant  *string   `json:",omitempty"`
-	DeviceAbi         *[]string `json:",omitempty"`
-	DeviceUsesClang   *bool     `json:",omitempty"`
-	DeviceVndkVersion *string   `json:",omitempty"`
+	Platform_version_name             *string  `json:",omitempty"`
+	Platform_sdk_version              *int     `json:",omitempty"`
+	Platform_sdk_codename             *string  `json:",omitempty"`
+	Platform_sdk_final                *bool    `json:",omitempty"`
+	Platform_version_active_codenames []string `json:",omitempty"`
+	Platform_version_future_codenames []string `json:",omitempty"`
+	Platform_vndk_version             *string  `json:",omitempty"`
+	Platform_systemsdk_versions       []string `json:",omitempty"`
+
+	DeviceName              *string   `json:",omitempty"`
+	DeviceArch              *string   `json:",omitempty"`
+	DeviceArchVariant       *string   `json:",omitempty"`
+	DeviceCpuVariant        *string   `json:",omitempty"`
+	DeviceAbi               *[]string `json:",omitempty"`
+	DeviceVndkVersion       *string   `json:",omitempty"`
+	DeviceSystemSdkVersions *[]string `json:",omitempty"`
 
 	DeviceSecondaryArch        *string   `json:",omitempty"`
 	DeviceSecondaryArchVariant *string   `json:",omitempty"`
@@ -126,6 +168,19 @@ type productVariables struct {
 	CrossHostArch          *string `json:",omitempty"`
 	CrossHostSecondaryArch *string `json:",omitempty"`
 
+	ResourceOverlays           *[]string `json:",omitempty"`
+	EnforceRROTargets          *[]string `json:",omitempty"`
+	EnforceRROExcludedOverlays *[]string `json:",omitempty"`
+
+	AAPTCharacteristics *string   `json:",omitempty"`
+	AAPTConfig          *[]string `json:",omitempty"`
+	AAPTPreferredConfig *string   `json:",omitempty"`
+	AAPTPrebuiltDPI     *[]string `json:",omitempty"`
+
+	DefaultAppCertificate *string `json:",omitempty"`
+
+	AppsDefaultVersionName *string `json:",omitempty"`
+
 	Allow_missing_dependencies *bool `json:",omitempty"`
 	Unbundled_build            *bool `json:",omitempty"`
 	Brillo                     *bool `json:",omitempty"`
@@ -136,14 +191,27 @@ type productVariables struct {
 	UseGoma                    *bool `json:",omitempty"`
 	Debuggable                 *bool `json:",omitempty"`
 	Eng                        *bool `json:",omitempty"`
-	EnableCFI                  *bool `json:",omitempty"`
 	Device_uses_hwc2           *bool `json:",omitempty"`
-	Treble                     *bool `json:",omitempty"`
+	Treble_linker_namespaces   *bool `json:",omitempty"`
+	Sepolicy_split             *bool `json:",omitempty"`
+	Enforce_vintf_manifest     *bool `json:",omitempty"`
 	Pdk                        *bool `json:",omitempty"`
+	Uml                        *bool `json:",omitempty"`
+	Use_lmkd_stats_log         *bool `json:",omitempty"`
+	Arc                        *bool `json:",omitempty"`
+	MinimizeJavaDebugInfo      *bool `json:",omitempty"`
+	Device_support_hwfde       *bool `json:",omitempty"`
+	Device_support_hwfde_perf  *bool `json:",omitempty"`
 
 	IntegerOverflowExcludePaths *[]string `json:",omitempty"`
 
-	VendorPath *string `json:",omitempty"`
+	EnableCFI       *bool     `json:",omitempty"`
+	CFIExcludePaths *[]string `json:",omitempty"`
+	CFIIncludePaths *[]string `json:",omitempty"`
+
+	VendorPath  *string `json:",omitempty"`
+	OdmPath     *string `json:",omitempty"`
+	ProductPath *string `json:",omitempty"`
 
 	ClangTidy  *bool   `json:",omitempty"`
 	TidyChecks *string `json:",omitempty"`
@@ -167,6 +235,17 @@ type productVariables struct {
 	Override_rs_driver *string `json:",omitempty"`
 
 	DeviceKernelHeaders []string `json:",omitempty"`
+	DistDir             *string  `json:",omitempty"`
+
+	ExtraVndkVersions []string `json:",omitempty"`
+
+	NamespacesToExport []string `json:",omitempty"`
+
+	PgoAdditionalProfileDirs []string `json:",omitempty"`
+
+	VendorVars map[string]map[string]string `json:",omitempty"`
+
+
 }
 
 func boolPtr(v bool) *bool {
@@ -183,21 +262,29 @@ func stringPtr(v string) *string {
 
 func (v *productVariables) SetDefaultConfig() {
 	*v = productVariables{
-		Platform_sdk_version:       intPtr(24),
+		Platform_sdk_version:              intPtr(26),
+		Platform_version_active_codenames: []string{"P"},
+		Platform_version_future_codenames: []string{"P"},
+
 		HostArch:                   stringPtr("x86_64"),
 		HostSecondaryArch:          stringPtr("x86"),
-		DeviceName:                 stringPtr("flounder"),
+		DeviceName:                 stringPtr("generic_arm64"),
 		DeviceArch:                 stringPtr("arm64"),
 		DeviceArchVariant:          stringPtr("armv8-a"),
-		DeviceCpuVariant:           stringPtr("denver64"),
+		DeviceCpuVariant:           stringPtr("generic"),
 		DeviceAbi:                  &[]string{"arm64-v8a"},
-		DeviceUsesClang:            boolPtr(true),
 		DeviceSecondaryArch:        stringPtr("arm"),
-		DeviceSecondaryArchVariant: stringPtr("armv7-a-neon"),
-		DeviceSecondaryCpuVariant:  stringPtr("denver"),
-		DeviceSecondaryAbi:         &[]string{"armeabi-v7a"},
-		Malloc_not_svelte:          boolPtr(false),
-		Safestack:                  boolPtr(false),
+		DeviceSecondaryArchVariant: stringPtr("armv8-a"),
+		DeviceSecondaryCpuVariant:  stringPtr("generic"),
+		DeviceSecondaryAbi:         &[]string{"armeabi-v7a", "armeabi"},
+
+		AAPTConfig:          &[]string{"normal", "large", "xlarge", "hdpi", "xhdpi", "xxhdpi"},
+		AAPTPreferredConfig: stringPtr("xhdpi"),
+		AAPTCharacteristics: stringPtr("nosdcard"),
+		AAPTPrebuiltDPI:     &[]string{"xhdpi", "xxhdpi"},
+
+		Malloc_not_svelte: boolPtr(true),
+		Safestack:         boolPtr(false),
 	}
 
 	if runtime.GOOS == "linux" {
@@ -218,7 +305,14 @@ func variableMutator(mctx BottomUpMutatorContext) {
 	a := module.base()
 	variableValues := reflect.ValueOf(&a.variableProperties.Product_variables).Elem()
 	zeroValues := reflect.ValueOf(zeroProductVariables.Product_variables)
+	valStruct := reflect.ValueOf(mctx.Config().productVariables)
 
+	doVariableMutation(mctx, a, variableValues, zeroValues, valStruct)
+
+}
+
+func doVariableMutation(mctx BottomUpMutatorContext, a *ModuleBase, variableValues reflect.Value, zeroValues reflect.Value,
+	valStruct reflect.Value) {
 	for i := 0; i < variableValues.NumField(); i++ {
 		variableValue := variableValues.Field(i)
 		zeroValue := zeroValues.Field(i)
@@ -226,8 +320,11 @@ func variableMutator(mctx BottomUpMutatorContext) {
 		property := "product_variables." + proptools.PropertyNameForField(name)
 
 		// Check that the variable was set for the product
-		val := reflect.ValueOf(mctx.Config().(Config).ProductVariables).FieldByName(name)
-		if !val.IsValid() || val.Kind() != reflect.Ptr || val.IsNil() {
+		val := valStruct.FieldByName(name)
+		if val.IsValid() && val.Kind() == reflect.Struct {
+			doVariableMutation(mctx, a, variableValue, zeroValue, val)
+			continue
+		} else if !val.IsValid() || val.Kind() != reflect.Ptr || val.IsNil() {
 			continue
 		}
 
